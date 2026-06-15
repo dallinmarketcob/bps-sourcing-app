@@ -1,0 +1,43 @@
+# Secrets — never commit
+.env
+*.env
+secrets/
+token.json
+credentials.json
+client_secret*.json
+
+# Local data
+*.sqlite
+*.sqlite3
+*.db
+data/
+source_maps/*.csv
+!source_maps/.gitkeep
+!source_maps/example_*.csv
+
+# Real email samples (may contain customer PII) — keep local only
+email_samples/*.eml
+email_samples/*.txt
+!email_samples/README.md
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+.mypy_cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Deploy bundles / build artifacts
+*.tgz
+*.tar.gz
+
+# Claude Code local settings (per-machine)
+.claude/settings.local.json

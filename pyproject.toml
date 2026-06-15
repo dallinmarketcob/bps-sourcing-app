@@ -1,0 +1,9 @@
+[project]
+name = "leadsource"
+version = "0.1.0"
+description = "Lead-source attribution engine for Brooks Pest Control"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

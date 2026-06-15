@@ -1,0 +1,17 @@
+# Core
+phonenumbers>=8.13          # E.164 phone normalization (the join key)
+pandas>=2.2                 # matching + dispute report
+SQLAlchemy>=2.0             # storage (SQLite)
+pydantic>=2.6              # models + config validation
+pydantic-settings>=2.2     # env-based settings
+python-dotenv>=1.0         # load .env locally
+httpx>=0.27                # API clients (PestRoutes, Meta, Genesys)
+APScheduler>=3.10          # daily/weekly scheduling on the cloud host
+
+# Gmail
+google-api-python-client>=2.120
+google-auth>=2.29
+google-auth-oauthlib>=1.2
+
+# Dev / test
+pytest>=8.1
