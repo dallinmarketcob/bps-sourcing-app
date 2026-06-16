@@ -12,9 +12,14 @@ Put these in .env (NOT in chat), then run this script:
     META_APP_ID=...                 # from App Dashboard -> Settings -> Basic
     META_APP_SECRET=...             # same page, click "Show"
     META_SHORT_USER_TOKEN=...       # the token from Graph API Explorer
-    META_PAGE_ID=472946656425133    # already set; Brooks Pest Control page
+    META_PAGE_ID=<your page id>     # single-page case (omit when passing a page arg)
 
-Usage:  python scripts/meta_page_token.py
+Usage:
+    # Single page -> writes the token to META_ACCESS_TOKEN in .env:
+    python scripts/meta_page_token.py
+    # A specific page (multi-page) -> PRINTS that page's token to paste into
+    # META_PAGES (run once per page; leave META_PAGE_ID blank):
+    python scripts/meta_page_token.py <page_id>
 """
 from __future__ import annotations
 
@@ -67,7 +72,16 @@ def main() -> int:
     app_id = cfg.get("META_APP_ID", "").strip()
     app_secret = cfg.get("META_APP_SECRET", "").strip()
     short = cfg.get("META_SHORT_USER_TOKEN", "").strip()
-    page_id = cfg.get("META_PAGE_ID", "472946656425133").strip()
+    # Page id: a CLI arg wins (multi-page — mint one token per page, printed for
+    # pasting into META_PAGES). Otherwise fall back to META_PAGE_ID (single page,
+    # auto-written to META_ACCESS_TOKEN).
+    arg_page = sys.argv[1].strip() if len(sys.argv) > 1 else ""
+    page_id = arg_page or cfg.get("META_PAGE_ID", "").strip()
+    multi = bool(arg_page)
+    if not page_id:
+        print("No page id: pass one as an argument "
+              "(python scripts/meta_page_token.py <page_id>) or set META_PAGE_ID in .env.")
+        return 1
 
     missing = [k for k, v in {
         "META_APP_ID": app_id, "META_APP_SECRET": app_secret,
@@ -118,9 +132,17 @@ def main() -> int:
         print(f"[3] OK -- {len(forms)} lead forms visible, {total} leads total. "
               "leads_retrieval works.")
 
-    _set_env_var(ENV, "META_ACCESS_TOKEN", page_token)
-    print(f"\n[4] wrote META_ACCESS_TOKEN to {ENV}")
-    print("    You can now delete META_SHORT_USER_TOKEN / META_APP_SECRET from .env.")
+    if multi:
+        print(f"\n[4] PAGE TOKEN for page {page_id} (non-expiring) — copy it now:\n")
+        print(page_token)
+        print("\n    Add it to META_PAGES in .env as one entry (one per page, "
+              "comma-separated):")
+        print(f"      {page_id}|<the token above>|Source NN")
+        print("    Leave META_PAGE_ID blank when using META_PAGES.")
+    else:
+        _set_env_var(ENV, "META_ACCESS_TOKEN", page_token)
+        print(f"\n[4] wrote META_ACCESS_TOKEN to {ENV}")
+        print("    You can now delete META_SHORT_USER_TOKEN / META_APP_SECRET from .env.")
     return 0
 
 
