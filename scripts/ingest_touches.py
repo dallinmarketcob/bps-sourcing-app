@@ -60,9 +60,8 @@ def main():
         return [r.touch for r in results if r.ok]
 
     def meta():
-        with MetaClient(s.meta_access_token) as mc:
-            return pull_lead_touches(mc, s.meta_page_id, s.meta_lead_source,
-                                     since_unix=int(since.timestamp()))
+        from leadsource.pipeline import pull_all_meta_touches
+        return pull_all_meta_touches(s, int(since.timestamp()))
 
     if "genesys" in only:
         ingest("genesys", genesys)

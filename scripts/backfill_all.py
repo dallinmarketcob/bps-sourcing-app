@@ -77,9 +77,8 @@ def main() -> int:
     # --- META (follows paging, no cap) ---
     if "meta" in channels:
         try:
-            with MetaClient(s.meta_access_token) as mc:
-                ts = pull_lead_touches(mc, s.meta_page_id, s.meta_lead_source,
-                                       since_unix=int(since.timestamp()))
+            from leadsource.pipeline import pull_all_meta_touches
+            ts = pull_all_meta_touches(s, int(since.timestamp()))
             ingest("meta", ts)
         except Exception as e:
             print(f"  meta     ERROR: {str(e)[:160]}", flush=True)

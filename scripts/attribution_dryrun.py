@@ -62,9 +62,8 @@ def main():
     touches += e_touches
     print(f"Gmail touches (last {touch_days}d): {len(e_touches)} (of {len(results)} emails)")
 
-    with MetaClient(s.meta_access_token) as mc:
-        m_touches = pull_lead_touches(mc, s.meta_page_id, s.meta_lead_source,
-                                      since_unix=int(since_touch.timestamp()))
+    from leadsource.pipeline import pull_all_meta_touches
+    m_touches = pull_all_meta_touches(s, int(since_touch.timestamp()))
     touches += m_touches
     print(f"Meta touches (last {touch_days}d): {len(m_touches)}")
 

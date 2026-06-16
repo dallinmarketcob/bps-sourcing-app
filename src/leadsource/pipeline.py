@@ -18,6 +18,32 @@ def load_maps(s):
     return source_map, rules
 
 
+def pull_all_meta_touches(s, since_unix: int, *, on_error=None) -> list:
+    """Pull Meta lead touches across ALL configured pages (s.meta_page_configs).
+
+    Each page gets its own MetaClient (its own token). One page failing — e.g.
+    its token can't read that page — does NOT stop the others; the failure is
+    reported via ``on_error`` (or printed). If EVERY configured page fails, the
+    error is raised so the caller records the channel as errored.
+    """
+    configs = s.meta_page_configs
+    touches: list = []
+    errors: list[str] = []
+    for pc in configs:
+        try:
+            with MetaClient(pc["token"]) as mc:
+                touches.extend(pull_lead_touches(
+                    mc, pc["page_id"], pc["source"], since_unix=since_unix))
+        except Exception as e:
+            errors.append(f'page {pc["page_id"]}: {str(e)[:120]}')
+    if errors:
+        note = "meta: " + "; ".join(errors)
+        (on_error or print)(note)
+        if configs and len(errors) == len(configs):
+            raise RuntimeError(note)
+    return touches
+
+
 def ingest(conn, s, days: int = 7, channels=("genesys", "gmail", "meta", "lsa")) -> dict:
     """Pull recent touches from each channel and upsert into the store.
     Each channel is independent — one failing (e.g. expired token) doesn't stop
@@ -56,9 +82,7 @@ def ingest(conn, s, days: int = 7, channels=("genesys", "gmail", "meta", "lsa"))
 
     if "meta" in channels:
         def meta():
-            with MetaClient(s.meta_access_token) as mc:
-                return pull_lead_touches(mc, s.meta_page_id, s.meta_lead_source,
-                                         since_unix=int(since.timestamp()))
+            return pull_all_meta_touches(s, int(since.timestamp()))
         run("meta", meta)
 
     if "lsa" in channels and s.google_ads_refresh_token:

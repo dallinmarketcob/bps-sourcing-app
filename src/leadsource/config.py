@@ -31,12 +31,46 @@ class Settings(BaseSettings):
     # --- Meta / Facebook Ads ---
     meta_access_token: str = ""
     meta_ad_account_id: str = ""
-    meta_page_id: str = "472946656425133"   # Brooks Pest Control page
+    meta_page_id: str = "472946656425133"   # single-page fallback — see meta_pages
     meta_lead_source: str = "Source 144"     # all Meta instant-form leads -> Source 144
     website_form_source: str = "Source 55"   # main brookspest.com website form
     # When a Meta lead and the website form land within this many minutes, the
     # Meta ad wins (it drove them to the site); the form email lags anyway.
     meta_form_tiebreak_minutes: float = 2
+    # MULTI-PAGE: when a company runs more than one Facebook Page (e.g. a DBA
+    # brand on its own page), list each here. Format: "page_id|page_token|source"
+    # entries, separated by commas or newlines. page_token and source are
+    # OPTIONAL and fall back to META_ACCESS_TOKEN / META_LEAD_SOURCE. A
+    # page-scoped token can only read ITS OWN page, so each page needs either its
+    # own page token here, or a single user token (in META_ACCESS_TOKEN) that can
+    # access every page. Leave blank to use the single META_PAGE_ID above.
+    meta_pages: str = ""
+
+    @property
+    def meta_page_configs(self) -> list[dict]:
+        """Resolved Meta pages to ingest, each {page_id, token, source}.
+
+        Prefers META_PAGES (multi-page); otherwise falls back to the single
+        META_PAGE_ID + META_ACCESS_TOKEN + META_LEAD_SOURCE.
+        """
+        out: list[dict] = []
+        for chunk in self.meta_pages.replace("\n", ",").split(","):
+            chunk = chunk.strip()
+            if not chunk:
+                continue
+            parts = [p.strip() for p in chunk.split("|")]
+            page_id = parts[0]
+            if not page_id:
+                continue
+            token = (parts[1] if len(parts) > 1 else "") or self.meta_access_token
+            source = (parts[2] if len(parts) > 2 else "") or self.meta_lead_source
+            out.append({"page_id": page_id, "token": token, "source": source})
+        if out:
+            return out
+        if self.meta_page_id and self.meta_access_token:
+            return [{"page_id": self.meta_page_id, "token": self.meta_access_token,
+                     "source": self.meta_lead_source}]
+        return []
 
     # --- Genesys Cloud ---
     genesys_region: str = "mypurecloud.com"
