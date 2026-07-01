@@ -122,7 +122,15 @@ class Settings(BaseSettings):
     db_path: Path = Path("data/attribution.sqlite")
     dry_run: bool = True
 
-    pay_per_lead_providers: str = ""
+    # --- Weekly duplicate-dispute report emails (Resend) ---
+    resend_api_key: str = ""
+    resend_from: str = ""          # e.g. "noreply@yourdomain.com" (a Resend-verified sender)
+    resend_to: str = ""            # comma-separated internal recipients (they forward to providers)
+    company_name: str = ""         # signature line on the report emails, e.g. "Acme Pest, Marketing"
+
+    @property
+    def resend_to_list(self) -> list[str]:
+        return [a.strip() for a in self.resend_to.split(",") if a.strip()]
 
     # Internal/natural-growth/process sources that must NEVER be overwritten.
     # Comma-separated source names (matched case-insensitively).
@@ -134,15 +142,6 @@ class Settings(BaseSettings):
         "Renewal - In Contract,Renewal - No Contract,Renewal - Out of Contract,"
         "Rate Raise Renewal,ZOLD - Renewal,Bad Debt Renewal,Conditions,SNS Campaign"
     )
-
-    @property
-    def pay_per_lead_provider_set(self) -> set[str]:
-        """Normalized set of provider names flagged as pay-per-lead."""
-        return {
-            p.strip().lower()
-            for p in self.pay_per_lead_providers.split(",")
-            if p.strip()
-        }
 
     @property
     def protected_source_set(self) -> frozenset[str]:

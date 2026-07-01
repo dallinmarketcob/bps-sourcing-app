@@ -30,8 +30,10 @@ SHELL=/bin/bash
 # of slipping permanently (a 2-day window let DoLead leads near the sale time get
 # missed). Write-back is gated by DRY_RUN in .env.
 0 3 * * *  root  cd $APP && .venv/bin/python scripts/nightly_run.py 7 14 >> logs/nightly.log 2>&1
-# weekly: dispute report, Monday 7am
-0 7 * * 1   root  cd $APP && .venv/bin/python scripts/dispute_report.py 7 30 >> logs/dispute.log 2>&1
+# weekly: duplicate-dispute reports (one email per provider group), Monday 7am.
+# --week = the previous full Sun-Sat week. Needs source_maps/dispute_groups.csv
+# and RESEND_* in .env (see docs/DISPUTE_REPORTS.md); no-ops safely if unset.
+0 7 * * 1   root  cd $APP && .venv/bin/python scripts/dispute_reports.py --week >> logs/dispute.log 2>&1
 CRON
 chmod 0644 /etc/cron.d/lead-attribution
 systemctl restart cron 2>/dev/null || service cron restart 2>/dev/null || true
@@ -45,4 +47,4 @@ echo ">> smoke test: ingest 1 day (Meta will skip until its token is added)"
 echo ">> DONE."
 echo "   logs:  $APP/logs/{ingest,dispute}.log"
 echo "   cron:  /etc/cron.d/lead-attribution"
-echo "   run manually:  cd $APP && .venv/bin/python scripts/dispute_report.py 7 30"
+echo "   run manually:  cd $APP && .venv/bin/python scripts/dispute_reports.py --dry-run"
